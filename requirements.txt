@@ -8,4 +8,5 @@ selenium
 scikit-learn
 google-auth
 google-auth-oauthlib
+beautifulsoup4
 streamlit-autorefresh
