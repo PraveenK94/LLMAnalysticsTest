@@ -60,22 +60,98 @@ SESSION_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
 # ===============================================================
 def load_cookies_from_secrets():
     """
-    Reads TOML entry:
+    Robust loader for cookies stored in Streamlit Secrets.
 
-    [cookies]
-    data = \"\"\" [ {...}, {...} ] \"\"\"
+    Accepts these shapes in st.secrets:
+      - st.secrets["cookies"]["data"] = '[...]'   (recommended)
+      - st.secrets["cookies"] = '[...]'           (string)
+      - st.secrets["cookies"] = [...]             (list)
+      - st.secrets["cookies"] = {...}             (single cookie dict)
 
-    Returns list of cookie dicts.
+    Returns: list of cookie dicts, or None on failure.
     """
-    if "cookies" not in st.secrets:
+    raw = st.secrets.get("cookies", None)
+    if raw is None:
         return None
 
-    raw = st.secrets["cookies"]
-    data = raw.get("data") if isinstance(raw, dict) else raw
+    # If it's an AttrDict or object with to_dict(), convert it
     try:
-        return json.loads(data)
-    except Exception as e:
-        st.error(f"Failed to parse cookies from secrets: {e}")
+        if hasattr(raw, "to_dict"):
+            raw = raw.to_dict()
+    except Exception:
+        # ignore conversion error and continue
+        pass
+
+    # If it's a mapping with 'data' field (the TOML approach), pull it out
+    if isinstance(raw, dict) and "data" in raw:
+        data = raw["data"]
+    else:
+        data = raw
+
+    # If it's already a list of dicts, return it immediately
+    if isinstance(data, list):
+        return data
+
+    # If it's already a dict (single cookie), wrap into list
+    if isinstance(data, dict):
+        return [data]
+
+    # If it's bytes/bytearray, decode to str
+    if isinstance(data, (bytes, bytearray)):
+        try:
+            data = data.decode("utf-8")
+        except Exception:
+            pass
+
+    # Now data should be a string (JSON). Try to parse it
+    if isinstance(data, str):
+        data_str = data.strip()
+        if not data_str:
+            return None
+        try:
+            parsed = json.loads(data_str)
+            # Parsed may be list or dict
+            if isinstance(parsed, list):
+                return parsed
+            if isinstance(parsed, dict):
+                return [parsed]
+            return None
+        except Exception as e:
+            st.error(f"Failed to parse cookies JSON from secrets: {e}")
+            return None
+
+    # Last-ditch: try to coerce to list/dict
+    try:
+        coerced = list(data)
+        # ensure elements look like dicts
+        if coerced and isinstance(coerced[0], dict):
+            return coerced
+    except Exception:
+        pass
+
+    st.error(f"Unsupported secrets['cookies'] format: {type(raw)}")
+    return None
+
+
+
+# def load_cookies_from_secrets():
+#     """
+#     Reads TOML entry:
+
+#     [cookies]
+#     data = \"\"\" [ {...}, {...} ] \"\"\"
+
+#     Returns list of cookie dicts.
+#     """
+#     if "cookies" not in st.secrets:
+#         return None
+
+#     raw = st.secrets["cookies"]
+#     data = raw.get("data") if isinstance(raw, dict) else raw
+#     try:
+#         return json.loads(data)
+#     except Exception as e:
+#         st.error(f"Failed to parse cookies from secrets: {e}")
         return None
 
 cookies = load_cookies_from_secrets()
