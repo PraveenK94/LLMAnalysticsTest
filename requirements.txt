@@ -1,0 +1,9 @@
+streamlit
+plotly>=5.0.0
+pandas
+numpy
+requests
+selenium
+webdriver-manager
+scikit-learn
+# add any other libs you require
