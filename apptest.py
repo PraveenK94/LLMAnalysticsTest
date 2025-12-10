@@ -152,7 +152,7 @@ def load_cookies_from_secrets():
 #         return json.loads(data)
 #     except Exception as e:
 #         st.error(f"Failed to parse cookies from secrets: {e}")
-        return None
+        # return None
 
 cookies = load_cookies_from_secrets()
 if cookies is None:
