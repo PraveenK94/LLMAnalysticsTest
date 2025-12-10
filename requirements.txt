@@ -1,9 +1,11 @@
-streamlit
+streamlit>=1.20.0
 plotly>=5.0.0
 pandas
 numpy
 requests
-selenium
 webdriver-manager
+selenium
 scikit-learn
-# add any other libs you require
+google-auth
+google-auth-oauthlib
+streamlit-autorefresh
