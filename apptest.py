@@ -37,7 +37,7 @@ if not st.session_state.auth_ok:
         correct = st.secrets.get("APP_PASSWORD", None)
         if pw and correct and pw == correct:
             st.session_state.auth_ok = True
-            st.experimental_rerun()
+            st.rerun()
         else:
             st.error("Invalid password.")
     st.stop()
